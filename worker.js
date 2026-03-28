@@ -1,9 +1,11 @@
-const ipPtr = require("ip-ptr");
+import ipPtr from "ip-ptr";
 const cliBrowsers = ["curl", "openbsd ftp", "wget"];
 
-addEventListener("fetch", event => {
-  event.respondWith(handleRequest(event.request));
-});
+export default {
+  async fetch(request) {
+    return handleRequest(request);
+  }
+};
 
 // https://www.beyondjava.net/elvis-operator-aka-safe-navigation-javascript-typescript
 function safe(obj) {
