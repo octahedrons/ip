@@ -21,7 +21,7 @@ function safe(obj) {
 }
 
 async function handleRequest(request, env) {
-  let ip = request.headers.get("CF-Connecting-IP");
+  let ip = request.headers.get("CF-Connecting-IP") || "127.0.0.1";
   let url = new URL(request.url);
 
   // Redirect to the URL shortener app if not exact match
@@ -55,17 +55,22 @@ async function handleRequest(request, env) {
   );
   let response = await fetch(reverse);
 
-  let json = await response.json();
-  let records = json.hasOwnProperty("Answer")
-    ? json.Answer.map(x => x.data)
-    : [];
+  let records = [];
+  if (response.ok) {
+    let json = await response.json();
+    records = json.hasOwnProperty("Answer")
+      ? json.Answer.map(x => x.data)
+      : [];
+  }
 
-  let asn;
+  let asn = safe({});
   if (cf.asn) {
     let bgp = await fetch(
       "https://bgp.burd.se/" + cf.asn
     );
-    asn = safe(await bgp.json());
+    if (bgp.ok) {
+      asn = safe(await bgp.json());
+    }
   }
 
   let locale = "en-US";
