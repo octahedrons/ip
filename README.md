@@ -1,37 +1,39 @@
 # ip
 
-Install Node and dependencies
+A Cloudflare Worker displaying your IP address and reverse hostname.
+
+## Setup
+
+Install Node and dependencies:
 
     brew install node
     npm install
 
-Install [Rust]
+## Development
 
-    brew install rust
+Start a local dev server:
 
-Install [Wrangler]
+    npx wrangler dev
 
-    cargo install wrangler
+A `.dev.vars` file is used to set development-only environment variables
+(e.g. `DEV=true` to skip the URL shortener redirect). This file is
+gitignored and not deployed. Create it with:
 
-Use [Wrangler] to
+    echo "DEV=true" > .dev.vars
 
-- Build
+## Deploy
 
-        wrangler build
+Deploy to Cloudflare:
 
-- Preview (opens browser)
+    npx wrangler deploy
 
-        wrangler preview
-        wrangler preview --watch
+Deployments to production are also triggered automatically via GitHub
+Actions on push to `main`.
 
-- Publish
-
-        wrangler publish
+## Format
 
 Format the code with [Prettier]:
 
     npm run format
 
-[Rust]: https://www.rust-lang.org/
-[Wrangler]: https://github.com/cloudflare/wrangler
 [Prettier]: https://prettier.io/

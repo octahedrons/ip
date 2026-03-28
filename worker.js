@@ -2,8 +2,8 @@ import ipPtr from "ip-ptr";
 const cliBrowsers = ["curl", "openbsd ftp", "wget"];
 
 export default {
-  async fetch(request) {
-    return handleRequest(request);
+  async fetch(request, env) {
+    return handleRequest(request, env);
   }
 };
 
@@ -20,12 +20,12 @@ function safe(obj) {
   });
 }
 
-async function handleRequest(request) {
+async function handleRequest(request, env) {
   let ip = request.headers.get("CF-Connecting-IP");
   let url = new URL(request.url);
 
   // Redirect to the URL shortener app if not exact match
-  if (url.hostname != "ip.burd.se" && !url.pathname.startsWith("/ip")) {
+  if (!env.DEV && url.hostname != "ip.burd.se" && !url.pathname.startsWith("/ip")) {
     let newUrl = new URL(request.url); // Avoid modifying "url"
     newUrl.hostname = "s.burd.se";
 
