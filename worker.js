@@ -173,7 +173,7 @@ ${currentDateString}
 ${ip}
 ${records.join("\n")}
 <a href="${asn.href}">AS${cf.asn}</a> (${asn.name})
-<a href="https://rpki.cloudflare.com/">RPKI</a>: ${rpki}
+<a href="https://isbgpsafeyet.com/">RPKI</a>: ${rpki}
 Country: ${cf.country}
 <a href="https://support.cloudflare.com/hc/en-us/articles/203118044#h_22b01241-01a5-4bed-a897-6e97cff5c288">Data center</a>: ${
     cf.colo
