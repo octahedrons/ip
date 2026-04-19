@@ -7,7 +7,7 @@ A Cloudflare Worker displaying your IP address and reverse hostname.
 Install Node and dependencies:
 
     brew install node
-    npm install
+    npm ci
 
 ## Development
 
