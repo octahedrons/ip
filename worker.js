@@ -20,12 +20,51 @@ function safe(obj) {
   });
 }
 
+async function fetchAsn(asn) {
+  if (!asn) return safe({});
+  try {
+    const r = await fetch("https://bgp.burd.se/" + asn);
+    return r.ok ? safe(await r.json()) : safe({});
+  } catch {
+    return safe({});
+  }
+}
+
+async function fetchRpki(ip, asn) {
+  if (!asn) return "unknown (no ASN)";
+  try {
+    const ni = await fetch(
+      `https://stat.ripe.net/data/network-info/data.json?resource=${encodeURIComponent(
+        ip
+      )}`
+    );
+    if (!ni.ok) return "unknown (prefix lookup failed)";
+    const prefix = (await ni.json())?.data?.prefix;
+    if (!prefix) return "unknown (no announced prefix)";
+    const rv = await fetch(
+      `https://stat.ripe.net/data/rpki-validation/data.json?resource=${asn}&prefix=${encodeURIComponent(
+        prefix
+      )}`
+    );
+    if (!rv.ok) return "unknown (validation lookup failed)";
+    const status = (await rv.json())?.data?.status;
+    if (!status) return "unknown (no status)";
+    return status;
+  } catch {
+    return "unknown (request error)";
+  }
+}
+
 async function handleRequest(request, env) {
   let ip = request.headers.get("CF-Connecting-IP") || "127.0.0.1";
   let url = new URL(request.url);
 
   // Redirect to the URL shortener app if not exact match
-  if (!env.DEV && url.hostname != "ip.burd.se" && !url.pathname.startsWith("/ip")) {
+  if (
+    !env.DEV &&
+    url.hostname != "ip.burd.se" &&
+    !url.pathname.startsWith("/ip")
+  ) {
     let newUrl = new URL(request.url); // Avoid modifying "url"
     newUrl.hostname = "s.burd.se";
 
@@ -58,20 +97,13 @@ async function handleRequest(request, env) {
   let records = [];
   if (response.ok) {
     let json = await response.json();
-    records = json.hasOwnProperty("Answer")
-      ? json.Answer.map(x => x.data)
-      : [];
+    records = json.hasOwnProperty("Answer") ? json.Answer.map(x => x.data) : [];
   }
 
-  let asn = safe({});
-  if (cf.asn) {
-    let bgp = await fetch(
-      "https://bgp.burd.se/" + cf.asn
-    );
-    if (bgp.ok) {
-      asn = safe(await bgp.json());
-    }
-  }
+  let [asn, rpki] = await Promise.all([
+    fetchAsn(cf.asn),
+    fetchRpki(ip, cf.asn)
+  ]);
 
   let locale = "en-US";
   let currentDate = new Date();
@@ -113,8 +145,11 @@ async function handleRequest(request, env) {
 ${ip}
 ${records.join("\n")}
 AS${cf.asn} (${asn.name})
+RPKI: ${rpki}
 Data center: ${cf.colo}
-${cf.tlsVersion ? cf.tlsVersion : "Unencrypted"} ${cf.tlsCipher ? "("+ cf.tlsCipher + ")" : ""}
+${cf.tlsVersion ? cf.tlsVersion : "Unencrypted"} ${
+    cf.tlsCipher ? "(" + cf.tlsCipher + ")" : ""
+  }
 ${userAgent}
 ${currentDateString}
 `;
@@ -138,11 +173,14 @@ ${currentDateString}
 ${ip}
 ${records.join("\n")}
 <a href="${asn.href}">AS${cf.asn}</a> (${asn.name})
+<a href="https://rpki.cloudflare.com/">RPKI</a>: ${rpki}
 Country: ${cf.country}
 <a href="https://support.cloudflare.com/hc/en-us/articles/203118044#h_22b01241-01a5-4bed-a897-6e97cff5c288">Data center</a>: ${
     cf.colo
   }
-${cf.tlsVersion ? cf.tlsVersion : "Unencrypted"} ${cf.tlsCipher ? "("+ cf.tlsCipher + ")" : ""}
+${cf.tlsVersion ? cf.tlsVersion : "Unencrypted"} ${
+    cf.tlsCipher ? "(" + cf.tlsCipher + ")" : ""
+  }
 ${userAgent}
 ${currentDateString}
 </pre>
