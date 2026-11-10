@@ -34,6 +34,12 @@ Deploy to Cloudflare:
 Deployments to production are also triggered automatically via GitHub
 Actions on push to `main`.
 
+## Test
+
+Run the tests with Node.js 22 or newer:
+
+    npm test
+
 ## Format
 
 Format the code with [Prettier]:

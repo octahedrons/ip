@@ -84,7 +84,7 @@ async function handleRequest(request, env) {
   }
 
   let cf = request.cf || {};
-  let userAgent = request.headers.get("User-Agent").toLocaleLowerCase();
+  let userAgent = (request.headers.get("User-Agent") || "").toLocaleLowerCase();
   let cliBrowser = cliBrowsers.find(browser => userAgent.includes(browser));
   let name = ipPtr(ip);
   let reverse = new Request(
